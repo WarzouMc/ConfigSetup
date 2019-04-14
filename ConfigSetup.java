@@ -4,6 +4,7 @@ import fr.WarzouMc.MonaiServGroup.Main;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +15,16 @@ public class ConfigSetup {
      **BaseConfig**
      **************/
 
-    public static class BaseConfig extends Main {
+    public static class BaseConfig {
+
+        private Main main;
 
         private FileConfiguration config;
 
-        public BaseConfig(FileConfiguration config) {this.config = config;}
+        public BaseConfig(FileConfiguration config, Main main) {
+            this.config = config;
+            this.main = main;
+        }
 
         /************
          **AllMoney**
@@ -36,8 +42,36 @@ public class ConfigSetup {
             config.createSection("monai." + playerName);
         }
 
+        public void createPlayerSection(String playerName){
+            config.createSection("player." + playerName);
+        }
+
+        /***********
+         **contains**
+         ***********/
+
+        public boolean containMoney(String playerName){
+            if(config.contains("monai." + playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        public boolean containPlayer(String playerName){
+            if(config.contains("player." + playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
         public void setMoney(int i, String playerName){
             config.set("monai." + playerName, i);
+        }
+
+        public void setPlayer(String s, String playerName){
+            config.set("player." + playerName, s);
         }
 
         public void addMoney(int i, String playerName){
@@ -48,25 +82,27 @@ public class ConfigSetup {
          **Player List**
          ***************/
 
-        public List<?> getList(){
-            return config.getList("allp");
+        public ArrayList<String> getList(){
+            return ( ArrayList<String> ) config.getStringList("allp");
         }
 
         public void addInList(String playerName){
-            List<String> l = ( List<String> ) getList();
-            config.set("allp", l.add(playerName));
+            ArrayList<String> l = ( ArrayList<String> ) config.getStringList("allp");
+            l.add(playerName);
+            config.set("allp", l);
         }
 
         public void removeInList(String playerName){
-            List<String> l = ( List<String> ) getList();
-            config.set("allp", l.remove(playerName));
+            ArrayList<String> l = ( ArrayList<String> ) config.getStringList("allp");
+            l.remove(playerName);
+            config.set("allp", l);
         }
 
         /********
          **File**
          ********/
 
-        public void save(){saveConfig();}
+        public void save(){main.saveConfig();}
 
     }
 
@@ -74,11 +110,16 @@ public class ConfigSetup {
      **ChatConfig**
      **************/
 
-    public static class ChatConfig extends Main {
+    public static class ChatConfig {
+
+        private Main main;
 
         private FileConfiguration config;
 
-        public ChatConfig(FileConfiguration chatConfig) {this.config = chatConfig;}
+        public ChatConfig(FileConfiguration chatConfig, Main main) {
+            this.config = chatConfig;
+            this.main = main;
+        }
 
         /***********
          **contain**
@@ -118,14 +159,14 @@ public class ConfigSetup {
 
         public void save() {
             try {
-                config.save(getChat());
+                config.save(main.getChat());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         public void update(){
-            YamlConfiguration.loadConfiguration(getChat());
+            YamlConfiguration.loadConfiguration(main.getChat());
         }
 
     }
@@ -134,11 +175,15 @@ public class ConfigSetup {
      **PermConfig**
      **************/
 
-    public static class PermConfig extends Main {
+    public static class PermConfig {
 
+        private Main main;
         private FileConfiguration config;
 
-        public PermConfig(FileConfiguration permConfig) {this.config = permConfig;}
+        public PermConfig(File permConfig, Main main) {
+            this.config = YamlConfiguration.loadConfiguration(permConfig);
+            this.main = main;
+        }
 
         /**********
          **Create**
@@ -148,18 +193,20 @@ public class ConfigSetup {
             config.createSection("Groups");
             config.createSection("Groups.op");
             config.createSection("Groups.member");
-            config.createSection("Groups.op.builder");
-            config.createSection("Groups.op.dev");
-            config.createSection("Groups.member.player");
+
+            this.save();
+            this.update();
 
             List op = new ArrayList();
+            List op1 = new ArrayList();
             List player = new ArrayList();
 
             op.add("SkyExpender.op");
+            op1.add("SkyExpender.op");
             player.add("SkyExpander.p");
 
             config.set("Groups.op.builder", op);
-            config.set("Groups.op.dev", op);
+            config.set("Groups.op.dev", op1);
             config.set("Groups.member.player", player);
         }
 
@@ -187,6 +234,10 @@ public class ConfigSetup {
             }else{
                 return false;
             }
+        }
+
+        public boolean containG(){
+            return config.contains("Groups");
         }
 
         /**********
@@ -243,14 +294,82 @@ public class ConfigSetup {
 
         public void save() {
             try {
-                config.save(getPerm());
+                config.save(main.getPerm());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         public void update(){
-            YamlConfiguration.loadConfiguration(getPerm());
+            this.config = YamlConfiguration.loadConfiguration(main.getPerm());
+        }
+
+    }
+
+    /*************
+     **ModConfig**
+     *************/
+
+    public static class ModConfig {
+
+        private Main main;
+        private FileConfiguration config;
+
+        public ModConfig(FileConfiguration modConfig, Main main) {
+            this.config = modConfig;
+            this.main = main;
+        }
+
+        /**********
+         **Create**
+         **********/
+
+        public void created(String playerName){
+            config.createSection(playerName);
+        }
+
+        /***********
+         **Contain**
+         ***********/
+
+        public boolean contain(String playerName){
+            if(config.contains(playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        /**********
+         **Setter**
+         **********/
+
+        public void set(String playerName, String mod){
+            config.set(playerName, mod);
+        }
+
+        /**********
+         **Getter**
+         **********/
+
+        public String get(String playerName){
+            return config.getString(playerName);
+        }
+
+        /********
+         **File**
+         ********/
+
+        public void save() {
+            try {
+                config.save(main.getMod());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void update(){
+            YamlConfiguration.loadConfiguration(main.getMod());
         }
 
     }
