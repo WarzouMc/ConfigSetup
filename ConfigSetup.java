@@ -46,6 +46,10 @@ public class ConfigSetup {
             config.createSection("player." + playerName);
         }
 
+        public void createPlayerKitSection(String playerName){
+            config.createSection("kitstart." + playerName);
+        }
+
         /***********
          **contains**
          ***********/
@@ -66,6 +70,14 @@ public class ConfigSetup {
             }
         }
 
+        public boolean containPlayerKit(String playerName){
+            if(config.contains("kitstart." + playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
         public void setMoney(int i, String playerName){
             config.set("monai." + playerName, i);
         }
@@ -75,7 +87,15 @@ public class ConfigSetup {
         }
 
         public void addMoney(int i, String playerName){
-            config.set("monai." + playerName, config.getInt("monai." + playerName) + i);
+            config.set("monai." + playerName, getMoney(playerName) + i);
+        }
+
+        public int getMoney(String playerName){
+            return config.getInt("monai." + playerName);
+        }
+
+        public int getAllMoney(){
+            return config.getInt("allmonai");
         }
 
         /***************
