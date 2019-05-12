@@ -80,6 +80,7 @@ public class ConfigSetup {
 
         public void setMoney(int i, String playerName){
             config.set("monai." + playerName, i);
+            config.set("allmonai", getAllMoney() - getMoney(playerName) + i);
         }
 
         public void setPlayer(String s, String playerName){
@@ -88,6 +89,7 @@ public class ConfigSetup {
 
         public void addMoney(int i, String playerName){
             config.set("monai." + playerName, getMoney(playerName) + i);
+            config.set("allmonai", getAllMoney() + i);
         }
 
         public int getMoney(String playerName){
@@ -107,7 +109,7 @@ public class ConfigSetup {
         }
 
         public void addInList(String playerName){
-            ArrayList<String> l = ( ArrayList<String> ) config.getStringList("allp");
+            ArrayList<String> l = ( ArrayList<String> ) config.get("allp");
             l.add(playerName);
             config.set("allp", l);
         }
@@ -162,7 +164,7 @@ public class ConfigSetup {
          **********/
 
         public void set(int i, String playerName){
-            config.set(playerName, i);
+            config.set(playerName + "", i);
         }
 
         /**********
@@ -170,7 +172,7 @@ public class ConfigSetup {
          **********/
 
         public int get(String playerName){
-            return config.getInt(playerName);
+            return config.getInt(playerName + "");
         }
 
         /********
@@ -390,6 +392,81 @@ public class ConfigSetup {
 
         public void update(){
             YamlConfiguration.loadConfiguration(main.getMod());
+        }
+
+    }
+
+    /**************
+     **ShopConfig**
+     **************/
+
+    public static class ShopConfig {
+
+        private Main main;
+        private FileConfiguration config;
+
+        public ShopConfig(FileConfiguration shopConfig, Main main) {
+            this.config = shopConfig;
+            this.main = main;
+        }
+
+        public void deletSection(String path){
+            config.set(path, null);
+        }
+
+        /**********
+         **Getter**
+         **********/
+
+        public int getInt(String path){
+            return config.getInt(path);
+        }
+
+        public String getString(String path){
+            return config.getString(path);
+        }
+
+        public boolean contain(String path){
+            if(config.contains(path)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        /**********
+         **Setter**
+         **********/
+
+        public void setInt(String path, int i){
+            config.set(path, i);
+        }
+
+        /********
+         **File**
+         ********/
+
+        public void save() {
+            try {
+                config.save(main.getShop());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void update(){
+            YamlConfiguration.loadConfiguration(main.getShop());
+        }
+
+    }
+
+    public static class StringMessage{
+
+        public String WareZone(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9WareZone§1] §2>> §1");
+            type.add("§4[§cWareZone§4] §2>> §4");
+            return type.get(MsgType);
         }
 
     }
