@@ -460,12 +460,171 @@ public class ConfigSetup {
 
     }
 
+    public static class LvlConfig {
+
+        private Main main;
+        private FileConfiguration config;
+
+        public LvlConfig(FileConfiguration lvlConfig, Main main) {
+            this.config = lvlConfig;
+            this.main = main;
+        }
+
+        /**********
+         **Create**
+         **********/
+
+        public void created(String playerName){
+            config.createSection("Players." + playerName);
+            config.createSection("Players." + playerName + ".Lvl");
+            config.createSection("Players." + playerName + ".LvlGrade");
+        }
+
+        /***********
+         **Contain**
+         ***********/
+
+        public boolean contain(String playerName){
+            if(config.contains("Players." + playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        /**********
+         **Setter**
+         **********/
+
+        public void setLvl(String playerName, int level){
+            config.set("Players." + playerName + ".Lvl", level);
+        }
+
+        public void setLvlGrade(String playerName, int grade){
+            config.set("Players." + playerName + ".LvlGrade", grade);
+        }
+
+        /**********
+         **Getter**
+         **********/
+
+        public int getLvl(String playerName){
+            return config.getInt("Players." + playerName + ".Lvl");
+        }
+
+        public String getLvlGrade(String playerName){
+            return getSpecGrade(getLvlGradeInt(playerName)).replace("&", "§");
+        }
+
+        public int getLvlGradeInt(String playerName){
+            return config.getInt("Players." + playerName + ".LvlGrade");
+        }
+
+        public List<String> getGradeList(){
+            return config.getStringList("LvlGrade");
+        }
+
+        public String getSpecGrade(int i){
+            return getGradeList().get(i);
+        }
+
+        public List<String> getColorList(){
+            return config.getStringList("Color");
+        }
+
+        public String getSpecColor(int i){
+            return getColorList().get(i);
+        }
+
+        public int[] getColors(String playerName){
+            int level = (getLvl(playerName) - 1) / 10;
+            int grade = getLvlGradeInt(playerName) * 10 / 20;
+            return new int[] {level, grade};
+        }
+
+        public String[] getNotif(String playerName){
+            int level = getColors(playerName)[0];
+            int grade = getColors(playerName)[1];
+            String levelColor = getSpecColor(level).replace("&", "§");
+            String gradeColor = getSpecColor(grade).replace("&", "§");
+            return new String[] {levelColor, gradeColor};
+        }
+
+        /*********
+         **Build**
+         *********/
+
+        public String build(String playerName){
+            String gradeColor = getNotif(playerName)[1];
+            String lvlColor = getNotif(playerName)[0];
+
+            String grade = gradeColor + "[§f" + getLvlGrade(playerName) + gradeColor + "]§f ";
+            String level = gradeColor + "[§f" + lvlColor + getLvl(playerName) + gradeColor + "]§f ";
+
+            if(getLvl(playerName) == 130){
+                level = gradeColor + "[§f§k!§r§11§f3§40§f§k!§r" + gradeColor + "]§f ";
+            }
+
+            String pr = grade + level;
+            return pr;
+        }
+
+        /********
+         **File**
+         ********/
+
+        public void save() {
+            try {
+                config.save(main.getLevels());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void update(){
+            YamlConfiguration.loadConfiguration(main.getLevels());
+        }
+
+    }
+
     public static class StringMessage{
 
         public String WareZone(int MsgType){
             List<String> type = new ArrayList<>();
-            type.add("§1[§9WareZone§1] §2>> §1");
-            type.add("§4[§cWareZone§4] §2>> §4");
+            type.add("§1[§9WarZone§1] §2>> §1");
+            type.add("§4[§cWarZone§4] §2>> §4");
+            type.add("§7[§fWarZone§7] §2>> §7");
+            type.add("§6[§eWarZone§6] §2>> §6");
+            type.add("§b[§3WarZone§b] §2>> §b");
+            type.add("§2[§aWarZone§2] §2>> §2");
+            return type.get(MsgType);
+        }
+
+        public String Servers(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9Servreur§1] §2>> §1");
+            type.add("§4[§cServreur§4] §2>> §4");
+            return type.get(MsgType);
+        }
+
+        public String Se(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9SE§1] §2>> §1");
+            type.add("§4[§cSE§4] §2>> §4");
+            return type.get(MsgType);
+        }
+
+        public String Protection(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9Protection§1] §2>> §1");
+            type.add("§4[§cProtection§4] §2>> §4");
+            return type.get(MsgType);
+        }
+
+        public String AntiLag(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9AntiLag§1] §2>> §1");
+            type.add("§4[§cAntiLag§4] §2>> §4");
             return type.get(MsgType);
         }
 
