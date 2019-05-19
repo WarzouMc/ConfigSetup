@@ -1,6 +1,8 @@
 package fr.WarzouMc.MonaiServGroup.fileConfiguration.config;
 
+import com.sun.xml.internal.fastinfoset.algorithm.HexadecimalEncodingAlgorithm;
 import fr.WarzouMc.MonaiServGroup.Main;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -478,6 +480,7 @@ public class ConfigSetup {
             config.createSection("Players." + playerName);
             config.createSection("Players." + playerName + ".Lvl");
             config.createSection("Players." + playerName + ".LvlGrade");
+            config.createSection("Players." + playerName + ".Xp");
         }
 
         /***********
@@ -504,6 +507,22 @@ public class ConfigSetup {
             config.set("Players." + playerName + ".LvlGrade", grade);
         }
 
+        public void resetXp(String playerName){
+            config.set("Players." + playerName + ".Xp", getXpPerLevelPerGrade(getLvl(playerName) + 1, getLvlGradeInt(playerName)));
+        }
+
+        public void setXp(String playerName, int xp){
+            config.set("Players." + playerName + ".Xp", xp);
+        }
+
+        public void addXpNeed(String playerName, int xp){
+            config.set("Players." + playerName + ".Xp", getXpNeed(playerName) + xp);
+        }
+
+        public void rvmXpNeed(String playerName, int xp){
+            config.set("Players." + playerName + ".Xp", getXpNeed(playerName) - xp);
+        }
+
         /**********
          **Getter**
          **********/
@@ -514,6 +533,20 @@ public class ConfigSetup {
 
         public String getLvlGrade(String playerName){
             return getSpecGrade(getLvlGradeInt(playerName)).replace("&", "§");
+        }
+
+        public int getXpNeed(String playerName){
+            return config.getInt("Players." + playerName + ".Xp");
+        }
+
+        public int getXpPerLevelPerGrade(int lvl, int grade){
+            int i;
+            i = lvl * (1 + (((lvl + 1) * (grade + 1)) * 10 / 100));
+            return i;
+        }
+
+        public int getTotalXp(String playerName){
+            return 1;
         }
 
         public int getLvlGradeInt(String playerName){
@@ -554,18 +587,38 @@ public class ConfigSetup {
          **Build**
          *********/
 
-        public String build(String playerName){
-            String gradeColor = getNotif(playerName)[1];
-            String lvlColor = getNotif(playerName)[0];
+        public void buildPassLevel(String playerName){
+            String first = buildLevel(playerName);
+            setLvl(playerName, getLvl(playerName) + 1);
+            resetXp(playerName);
+            save();
+            update();
+            String second = buildLevel(playerName);
+            Bukkit.getPlayer(playerName).sendTitle(first + " §b-> " + second, "§b§oLevel up");
+        }
 
-            String grade = gradeColor + "[§f" + getLvlGrade(playerName) + gradeColor + "]§f ";
+        public String buildLevel(String playerName){
+            String lvlColor = getNotif(playerName)[0];
+            String gradeColor = getNotif(playerName)[1];
+
             String level = gradeColor + "[§f" + lvlColor + getLvl(playerName) + gradeColor + "]§f ";
 
             if(getLvl(playerName) == 130){
                 level = gradeColor + "[§f§k!§r§11§f3§40§f§k!§r" + gradeColor + "]§f ";
             }
 
-            String pr = grade + level;
+            return level;
+        }
+
+        public String buildGrade(String playerName){
+            String gradeColor = getNotif(playerName)[1];
+
+            String grade = gradeColor + "[§f" + getLvlGrade(playerName) + gradeColor + "]§f ";
+            return grade;
+        }
+
+        public String build(String playerName){
+            String pr = buildGrade(playerName) + buildLevel(playerName);
             return pr;
         }
 
@@ -625,6 +678,13 @@ public class ConfigSetup {
             List<String> type = new ArrayList<>();
             type.add("§1[§9AntiLag§1] §2>> §1");
             type.add("§4[§cAntiLag§4] §2>> §4");
+            return type.get(MsgType);
+        }
+
+        public String Xp(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9XP§1] §2>> §1");
+            type.add("§4[§cXP§4] §2>> §4");
             return type.get(MsgType);
         }
 
