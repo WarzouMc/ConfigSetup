@@ -3,8 +3,11 @@ package fr.WarzouMc.MonaiServGroup.fileConfiguration.config;
 import com.sun.xml.internal.fastinfoset.algorithm.HexadecimalEncodingAlgorithm;
 import fr.WarzouMc.MonaiServGroup.Main;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -483,6 +486,23 @@ public class ConfigSetup {
             config.createSection("Players." + playerName + ".Xp");
         }
 
+        public void createList(){
+            List<Integer> l = new ArrayList<>();
+            if(!config.contains("LevelsXp")){
+                config.createSection("LevelsXp");
+                save();
+                update();
+            }
+            for(int i = 0; i < 30; i++){
+                for(int i1 = 1; i1 < 150; i1++){
+                    l.add(getXpPerLevelPerGrade(i1, i));
+                }
+            }
+            config.set("LevelsXp", l);
+            save();
+            update();
+        }
+
         /***********
          **Contain**
          ***********/
@@ -505,10 +525,25 @@ public class ConfigSetup {
 
         public void setLvlGrade(String playerName, int grade){
             config.set("Players." + playerName + ".LvlGrade", grade);
+            if(grade > getDiscoverGrade()){
+                config.set("discover", grade);
+                Bukkit.broadcastMessage(new StringMessage().Servers(0) + "§6Un nouveau prestige a été découvert par : " + Bukkit.getPlayer(playerName).getDisplayName() + ".\n§2Braveau à toi tu est maintenant : §r" + buildGradeFormInt(grade) + " §4!");
+            }else{
+                Bukkit.broadcastMessage(new StringMessage().Servers(0) + Bukkit.getPlayer(playerName).getDisplayName() + " §2est passé : " + buildGradeFormInt(grade));
+            }
+
+            Player player = Bukkit.getPlayer(playerName);
+
+            player.closeInventory();
+            player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1, 1);
+            player.sendTitle("§6§lTu est :", buildGradeFormInt(grade));
+
+            new BaseConfig(main.getConfig(), main).setMoney(30, playerName);
+            new BaseConfig(main.getConfig(), main).save();
         }
 
         public void resetXp(String playerName){
-            config.set("Players." + playerName + ".Xp", getXpPerLevelPerGrade(getLvl(playerName) + 1, getLvlGradeInt(playerName)));
+            config.set("Players." + playerName + ".Xp", getXpPerLevelPerGrade(getLvl(playerName), getLvlGradeInt(playerName)));
         }
 
         public void setXp(String playerName, int xp){
@@ -521,6 +556,13 @@ public class ConfigSetup {
 
         public void rvmXpNeed(String playerName, int xp){
             config.set("Players." + playerName + ".Xp", getXpNeed(playerName) - xp);
+        }
+
+        public void passGrade(String playerName, int i){
+            setLvlGrade(playerName, i);
+            setLvl(playerName, 1);
+            resetXp(playerName);
+            save();
         }
 
         /**********
@@ -540,9 +582,10 @@ public class ConfigSetup {
         }
 
         public int getXpPerLevelPerGrade(int lvl, int grade){
-            int i;
-            i = lvl * (1 + (((lvl + 1) * (grade + 1)) * 10 / 100));
-            return i;
+            float i;
+            i = lvl * (5f + (((lvl + 1f) * ((grade + 1f) * ((grade + 1f) / 100f * 10f)) * 10f / 100f)));
+            int r = Math.round(i);
+            return r;
         }
 
         public int getTotalXp(String playerName){
@@ -567,6 +610,42 @@ public class ConfigSetup {
 
         public String getSpecColor(int i){
             return getColorList().get(i);
+        }
+
+        public int getTotalGameXp(){
+            int total = 0;
+            for(int i = 0; i < 30; i++){
+                for(int i1 = 1; i1 < 150; i1++){
+                    total = total + getXpPerLevelPerGrade(i1, i);
+                }
+            }
+            return total + 5020;
+        }
+
+        public int getTotalXpOfPlayer(String playerName){
+            int total = 0;
+            List<Integer> l = config.getIntegerList("LevelsXp");
+
+            if(getLvl(playerName) < 150){
+                for(int i = 0; i < getLvl(playerName) + (getLvlGradeInt(playerName) * 149); i++){
+                    total = total + l.get(i);
+                }
+                total = total + ((getLvl(playerName) + (getLvlGradeInt(playerName) * 149) - 1) - getXpNeed(playerName));
+            }else {
+                if(getLvlGradeInt(playerName) < 29){
+                    for(int i = 0; i < 1 + ((getLvlGradeInt(playerName) + 1) * 149); i++){
+                        total = total + l.get(i);
+                    }
+                }else{
+                    total = getTotalGameXp();
+                }
+            }
+
+            return total;
+        }
+
+        public int getDiscoverGrade(){
+            return config.getInt("discover");
         }
 
         public int[] getColors(String playerName){
@@ -595,6 +674,7 @@ public class ConfigSetup {
             update();
             String second = buildLevel(playerName);
             Bukkit.getPlayer(playerName).sendTitle(first + " §b-> " + second, "§b§oLevel up");
+            Bukkit.getPlayer(playerName).sendMessage("§b§oLevel Up §r: " + first + "§b-> " + second);
         }
 
         public String buildLevel(String playerName){
@@ -603,11 +683,19 @@ public class ConfigSetup {
 
             String level = gradeColor + "[§f" + lvlColor + getLvl(playerName) + gradeColor + "]§f ";
 
-            if(getLvl(playerName) == 130){
-                level = gradeColor + "[§f§k!§r§11§f3§40§f§k!§r" + gradeColor + "]§f ";
+            if(getLvl(playerName) == 150){
+                level = gradeColor + "[§f§k!§r§11§f5§40§f§k!§r" + gradeColor + "]§f ";
             }
 
             return level;
+        }
+
+        public String buildGradeFormInt(int i){
+            List<String> l = config.getStringList("LvlGrade");
+            String grade = l.get(i).replace("&", "§");
+            String color = getSpecColor(i * 10 / 20).replace("&", "§");
+            grade = color + "[§f" + grade + color + "]";
+            return grade;
         }
 
         public String buildGrade(String playerName){
@@ -685,6 +773,13 @@ public class ConfigSetup {
             List<String> type = new ArrayList<>();
             type.add("§1[§9XP§1] §2>> §1");
             type.add("§4[§cXP§4] §2>> §4");
+            return type.get(MsgType);
+        }
+
+        public String Money(int MsgType){
+            List<String> type = new ArrayList<>();
+            type.add("§1[§9Money§1] §2>> §1");
+            type.add("§4[§cMoney§4] §2>> §4");
             return type.get(MsgType);
         }
 
