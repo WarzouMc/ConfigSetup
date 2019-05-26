@@ -300,7 +300,13 @@ public class ConfigSetup {
         }
 
         public String getPerms(String playerName){
-            return config.getString(playerName+".type");
+            String s = "";
+            if(contain(playerName)){
+                s = config.getString(playerName+".type");
+            }else{
+                s = "nop";
+            }
+            return s;
         }
 
         public String getDisplay(String playerName){
@@ -620,6 +626,29 @@ public class ConfigSetup {
                 }
             }
             return total + 5020;
+        }
+
+        public int getGradeXp(int i){
+            int xp = 0;
+            for (int j = 0; j < 150; j++) {
+                xp += getXpPerLevelPerGrade(j, i);
+            }
+            return xp;
+        }
+
+        public int getPlayerXpInGrade(String playerName){
+            int level = getLvl(playerName);
+            int prestige = getLvlGradeInt(playerName);
+
+            int xp = 0;
+
+            for (int i = 1; i < level; i++) {
+                xp += getXpPerLevelPerGrade(i, prestige);
+            }
+
+            xp += (getXpPerLevelPerGrade(level, prestige) - getXpNeed(playerName));
+
+            return xp;
         }
 
         public int getTotalXpOfPlayer(String playerName){
