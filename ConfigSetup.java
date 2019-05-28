@@ -757,6 +757,137 @@ public class ConfigSetup {
 
     }
 
+    public static class TradeConfig {
+
+        private Main main;
+        private FileConfiguration config;
+
+        public TradeConfig(FileConfiguration tradeConfig, Main main) {
+            this.config = tradeConfig;
+            this.main = main;
+        }
+
+        /**********
+         **Create**
+         **********/
+
+        public void createTrade(String sender, String receiver){
+            config.createSection(sender + " " + receiver);
+            config.createSection(sender + " " + receiver + ".in");
+            config.createSection(sender + " " + receiver + "." + sender);
+            config.createSection(sender + " " + receiver + "." + receiver);
+            config.createSection(sender + " " + receiver + ".l");
+
+            config.set(sender + " " + receiver + ".in", true);
+            config.set(sender + " " + receiver + "." + sender, 5);
+            config.set(sender + " " + receiver + "." + receiver, 5);
+
+            config.createSection(sender);
+            config.set(sender, "sender");
+
+            config.createSection(receiver);
+            config.set(receiver, "receiver");
+
+            List<String> l = new ArrayList<>();
+            l.add(sender);
+            l.add(receiver);
+
+            config.set(sender + " " + receiver + ".l", l);
+        }
+
+        /***********
+         **Contain**
+         ***********/
+
+        public boolean contain(String playerName){
+            if(config.contains(playerName)){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        /**********
+         **Setter**
+         **********/
+
+        public void setTradeAcceptOf(String path, int i){
+            config.set(path, i);
+        }
+
+        /**********
+         **Getter**
+         **********/
+
+        public int[] getTradeAccept(String tradeName){
+            int sender = 0;
+            int receiver = 0;
+            List<String> l = getTradePlayer(tradeName);
+            sender = config.getInt(tradeName + "." + l.get(0));
+            receiver = config.getInt(tradeName + "." + l.get(1));
+
+            return new int[] {sender, receiver};
+        }
+
+        public List<String> getTradePlayer(String tradeName){
+            return config.getStringList(tradeName + ".l");
+        }
+
+        public List<String> getInTrade(){
+            List<String> l = new ArrayList<>();
+
+            for (Player sender : Bukkit.getOnlinePlayers()) {
+                for (Player receiver : Bukkit.getOnlinePlayers()) {
+                    if(config.contains(sender.getName() + " " + receiver.getName())){
+                        l.add(sender.getName() + " " + receiver.getName());
+                    }
+                }
+            }
+
+            return l;
+        }
+
+        public String[] getTrade(String playerName){
+            String section = "";
+            String other = "";
+            if(config.getString(playerName).equalsIgnoreCase("sender")){
+                for (Player pls : Bukkit.getOnlinePlayers()) {
+                    if(config.contains(playerName + " " + pls.getName())){
+                        section = playerName + " " + pls.getName();
+                        other = pls.getName();
+                        break;
+                    }
+                }
+            }else {
+                for (Player pls : Bukkit.getOnlinePlayers()) {
+                    if(config.contains(pls.getName() + " " + playerName)){
+                        section = pls.getName() + " " + playerName;
+                        other = playerName + " " + pls.getName();;
+                        break;
+                    }
+                }
+            }
+            return new String[] {section, other};
+        }
+
+        /********
+         **File**
+         ********/
+
+        public void save() {
+            try {
+                config.save(main.getTrade());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void update(){
+            YamlConfiguration.loadConfiguration(main.getTrade());
+        }
+
+    }
+
     public static class StringMessage{
 
         public String WareZone(int MsgType){
